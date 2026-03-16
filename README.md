@@ -1,5 +1,44 @@
 # Reservation Booking Script
 
+## Free Deployment (GitHub Pages + Supabase + GitHub Actions)
+
+This supports a free-style deployment where:
+1. Users submit from a static homepage.
+2. Requests are stored in Supabase.
+3. GitHub Actions cron runs daily at 10:00 AM (Asia/Kolkata) and processes all active requests one by one.
+
+### Files Added For This
+
+- `public/index.html`: public booking form
+- `public/main.js`: submits form to Supabase REST
+- `public/config.js`: Supabase URL + anon key
+- `supabase/schema.sql`: tables + RLS policies
+- `.github/workflows/daily-booking.yml`: daily worker schedule
+- `run_daily_bookings_supabase.py`: worker that reads DB and executes bookings
+
+### Setup Steps
+
+1. Create a Supabase project.
+2. Run SQL from `supabase/schema.sql` in Supabase SQL editor.
+3. Update `public/config.js`:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+4. In GitHub repo settings -> Secrets and variables -> Actions, add:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+5. Enable GitHub Pages for `/public` (or publish `public` folder via your static host).
+6. Keep `.github/workflows/daily-booking.yml` enabled.
+
+### Manual Worker Run
+
+You can trigger immediately from GitHub Actions via `workflow_dispatch`, or run locally:
+
+```bash
+SUPABASE_URL="https://<project>.supabase.co" \
+SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" \
+.venv/bin/python run_daily_bookings_supabase.py
+```
+
 Automates this flow:
 1. Open reservation homepage.
 2. Click **Confirm and continue**.

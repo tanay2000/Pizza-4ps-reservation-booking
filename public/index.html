@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pizza 4P Booking Form</title>
+  <style>
+    body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;background:#f6f7fb;margin:0;padding:30px}
+    .wrap{max-width:900px;margin:0 auto}
+    .card{background:#fff;border:1px solid #dde3ea;border-radius:14px;padding:18px}
+    h1{margin:0 0 8px 0}
+    p{color:#5b6573}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{font-size:13px;color:#374151;display:block;margin-bottom:4px}
+    input,textarea,button{width:100%;box-sizing:border-box;border-radius:9px}
+    input,textarea{border:1px solid #c9d3df;padding:10px}
+    button{border:0;background:#0f4c81;color:#fff;padding:12px;font-weight:600;cursor:pointer}
+    .full{grid-column:1/3}
+    .ok{color:#0b6b3f}
+    .err{color:#b3261e}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Pizza 4P Booking Request</h1>
+      <p>Submit once. Daily 10:00 AM worker will process active requests.</p>
+      <form id="booking-form">
+        <div class="grid">
+          <div><label>Guest name</label><input name="guest_name" required /></div>
+          <div><label>Email</label><input type="email" name="guest_email" required /></div>
+          <div><label>Phone</label><input name="guest_phone" required /></div>
+          <div><label>Guests</label><input name="guests" value="2" required /></div>
+          <div><label>Preferred time</label><input name="time_text" value="8:00 PM" required /></div>
+          <div><label>Fallback start</label><input name="fallback_start" value="8:00 PM" required /></div>
+          <div><label>Fallback end</label><input name="fallback_end" value="10:00 PM" required /></div>
+          <div><label>Slot interval minutes</label><input name="slot_interval_minutes" value="15" required /></div>
+          <div><label>Timezone</label><input name="timezone" value="Asia/Kolkata" required /></div>
+          <div><label>Auto confirm</label><input name="auto_confirm" value="true" required /></div>
+          <div><label>Headless</label><input name="headless" value="true" required /></div>
+          <div class="full"><label>Special request</label><textarea name="special_request"></textarea></div>
+        </div>
+        <input type="hidden" name="booking_url" value="https://www.tablecheck.com/en/pizza-4ps-in-indiranagar/reserve/message" />
+        <p><button type="submit">Submit Request</button></p>
+      </form>
+      <p id="status"></p>
+    </div>
+  </div>
+  <script src="./config.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>
