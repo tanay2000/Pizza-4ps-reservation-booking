@@ -1,5 +1,44 @@
 # Reservation Booking Script
 
+## Free Deployment (GitHub Pages + Supabase + GitHub Actions)
+
+This supports a free-style deployment where:
+1. Users submit from a static homepage.
+2. Requests are stored in Supabase.
+3. GitHub Actions cron runs daily at 10:00 AM (Asia/Kolkata) and processes all active requests one by one.
+
+### Files Added For This
+
+- `public/index.html`: public booking form
+- `public/main.js`: submits form to Supabase REST
+- `public/config.js`: Supabase URL + anon key
+- `supabase/schema.sql`: tables + RLS policies
+- `.github/workflows/daily-booking.yml`: daily worker schedule
+- `run_daily_bookings_supabase.py`: worker that reads DB and executes bookings
+
+### Setup Steps
+
+1. Create a Supabase project.
+2. Run SQL from `supabase/schema.sql` in Supabase SQL editor.
+3. Update `public/config.js`:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+4. In GitHub repo settings -> Secrets and variables -> Actions, add:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+5. Enable GitHub Pages for `/public` (or publish `public` folder via your static host).
+6. Keep `.github/workflows/daily-booking.yml` enabled.
+
+### Manual Worker Run
+
+You can trigger immediately from GitHub Actions via `workflow_dispatch`, or run locally:
+
+```bash
+SUPABASE_URL="https://<project>.supabase.co" \
+SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" \
+.venv/bin/python run_daily_bookings_supabase.py
+```
+
 Automates this flow:
 1. Open reservation homepage.
 2. Click **Confirm and continue**.
@@ -10,15 +49,32 @@ Automates this flow:
 7. Fill guest details.
 8. Auto-click **Confirm booking**.
 
+## Multi-User Hosted Mode (Web + Daily Worker)
+
+This repo now includes:
+- `server.py`: homepage/form where many users submit booking requests.
+- `run_daily_bookings.py`: daily worker that runs all active requests one-by-one.
+- `data/bookings.db`: SQLite storage for user requests and run history.
+
 ## Setup (Isolated Python Environment)
 
 ```bash
 cd /Users/tanaygupta/Documents/Playground
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
+.venv/bin/pip install -r requirements.txt
 .venv/bin/pip install playwright
 .venv/bin/python -m playwright install chromium
 ```
+
+Start web app:
+
+```bash
+.venv/bin/uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+Then open:
+- `http://localhost:8000`
 
 ## Run (Python)
 
@@ -52,6 +108,20 @@ AUTO_CONFIRM="true" \
 .venv/bin/python book_reservation.py
 ```
 
+## One-Time Interactive Setup (Recommended for cron)
+
+This asks for your details once and stores them in `.booking.env`:
+
+```bash
+.venv/bin/python setup_booking_config.py
+```
+
+After this, normal run uses those saved values automatically:
+
+```bash
+.venv/bin/python book_reservation.py
+```
+
 ## Config
 
 - `BOOKING_URL` (required): reservation page URL.
@@ -67,6 +137,7 @@ AUTO_CONFIRM="true" \
 - `TIMEZONE` (optional, default `Asia/Kolkata`): browser timezone.
 - `SAVE_DEBUG_PAGES` (default `true`): saves HTML + PNG per step.
 - `DEBUG_DIR` (default `debug-pages`): output folder for captures.
+- `BOOKING_CONFIG_FILE` (optional): path to env file; default is `.booking.env`.
 
 ## Notes
 
@@ -84,7 +155,7 @@ crontab -e
 Add:
 
 ```cron
-0 10 * * * cd /Users/tanaygupta/Documents/Playground && /usr/bin/env BOOKING_URL="https://www.tablecheck.com/en/pizza-4ps-in-indiranagar/reserve/message" GUEST_NAME="Tanay Gupta" GUEST_EMAIL="tanaygupta2000@gmail.com" GUEST_PHONE="+91 9057222901" SPECIAL_REQUEST="" FALLBACK_START="8:00 PM" FALLBACK_END="10:00 PM" SLOT_INTERVAL_MINUTES="15" AUTO_CONFIRM="true" HEADLESS="true" /Users/tanaygupta/Documents/Playground/.venv/bin/python /Users/tanaygupta/Documents/Playground/book_reservation.py >> /Users/tanaygupta/Documents/Playground/booking.log 2>&1
+0 10 * * * cd /Users/tanaygupta/Documents/Playground && /Users/tanaygupta/Documents/Playground/.venv/bin/python /Users/tanaygupta/Documents/Playground/run_daily_bookings.py >> /Users/tanaygupta/Documents/Playground/booking-worker.log 2>&1
 ```
 
 This runs daily at 10:00 AM local machine time.
