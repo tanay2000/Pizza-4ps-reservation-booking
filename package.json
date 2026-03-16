@@ -1,0 +1,12 @@
+{
+  "name": "reservation-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "book": "node bookReservation.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.53.0"
+  }
+}
