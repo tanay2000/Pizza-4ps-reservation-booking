@@ -52,6 +52,20 @@ AUTO_CONFIRM="true" \
 .venv/bin/python book_reservation.py
 ```
 
+## One-Time Interactive Setup (Recommended for cron)
+
+This asks for your details once and stores them in `.booking.env`:
+
+```bash
+.venv/bin/python setup_booking_config.py
+```
+
+After this, normal run uses those saved values automatically:
+
+```bash
+.venv/bin/python book_reservation.py
+```
+
 ## Config
 
 - `BOOKING_URL` (required): reservation page URL.
@@ -67,6 +81,7 @@ AUTO_CONFIRM="true" \
 - `TIMEZONE` (optional, default `Asia/Kolkata`): browser timezone.
 - `SAVE_DEBUG_PAGES` (default `true`): saves HTML + PNG per step.
 - `DEBUG_DIR` (default `debug-pages`): output folder for captures.
+- `BOOKING_CONFIG_FILE` (optional): path to env file; default is `.booking.env`.
 
 ## Notes
 
@@ -84,7 +99,7 @@ crontab -e
 Add:
 
 ```cron
-0 10 * * * cd /Users/tanaygupta/Documents/Playground && /usr/bin/env BOOKING_URL="https://www.tablecheck.com/en/pizza-4ps-in-indiranagar/reserve/message" GUEST_NAME="Tanay Gupta" GUEST_EMAIL="tanaygupta2000@gmail.com" GUEST_PHONE="+91 9057222901" SPECIAL_REQUEST="" FALLBACK_START="8:00 PM" FALLBACK_END="10:00 PM" SLOT_INTERVAL_MINUTES="15" AUTO_CONFIRM="true" HEADLESS="true" /Users/tanaygupta/Documents/Playground/.venv/bin/python /Users/tanaygupta/Documents/Playground/book_reservation.py >> /Users/tanaygupta/Documents/Playground/booking.log 2>&1
+0 10 * * * cd /Users/tanaygupta/Documents/Playground && /usr/bin/env BOOKING_CONFIG_FILE="/Users/tanaygupta/Documents/Playground/.booking.env" /Users/tanaygupta/Documents/Playground/.venv/bin/python /Users/tanaygupta/Documents/Playground/book_reservation.py >> /Users/tanaygupta/Documents/Playground/booking.log 2>&1
 ```
 
 This runs daily at 10:00 AM local machine time.
