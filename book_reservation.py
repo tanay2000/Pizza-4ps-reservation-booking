@@ -10,6 +10,34 @@ def env(name: str, default: str) -> str:
     return os.getenv(name, default).strip()
 
 
+def load_env_file(path: Path) -> None:
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+        if (value.startswith('"') and value.endswith('"')) or (
+            value.startswith("'") and value.endswith("'")
+        ):
+            value = value[1:-1]
+        # Keep explicit environment variables higher priority than file values.
+        os.environ.setdefault(key, value)
+
+
+def load_runtime_env() -> None:
+    config_path = Path(os.getenv("BOOKING_CONFIG_FILE", ".booking.env")).expanduser()
+    load_env_file(config_path)
+
+
+load_runtime_env()
+
+
 CONFIG = {
     "url": env(
         "BOOKING_URL",

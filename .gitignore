@@ -2,5 +2,10 @@
 booking.log
 __pycache__/
 *.pyc
+.DS_Store
+.booking.env
+debug-pages/
+data/
+booking-worker.log
 
 .DS_Store
