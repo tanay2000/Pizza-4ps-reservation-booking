@@ -118,6 +118,15 @@ def fill_first_visible(candidates, value: str) -> bool:
     return False
 
 
+def split_full_name(full_name: str) -> tuple[str, str]:
+    parts = [p for p in full_name.strip().split() if p]
+    if not parts:
+        return "", ""
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], " ".join(parts[1:])
+
+
 def any_visible(candidates) -> bool:
     for locator in candidates:
         try:
@@ -498,14 +507,61 @@ def select_availability(page: Page) -> None:
     page.wait_for_timeout(1000)
 
 
-def fill_guest_details(page: Page) -> None:
-    ok_name = fill_first_visible(
+def is_details_page(page: Page) -> bool:
+    if "/reserve/review" in page.url:
+        return True
+    return any_visible(
         [
-            page.get_by_label(re.compile(r"full name|name", re.I)),
-            page.locator("input[name*='name' i], input[id*='name' i]"),
-        ],
-        CONFIG["guest_name"],
+            page.get_by_label(re.compile(r"first name", re.I)),
+            page.get_by_label(re.compile(r"last name|surname|family name", re.I)),
+            page.get_by_label(re.compile(r"e-?mail", re.I)),
+            page.get_by_label(re.compile(r"phone|mobile|tel", re.I)),
+        ]
     )
+
+
+def fill_guest_details(page: Page) -> None:
+    first_name, last_name = split_full_name(CONFIG["guest_name"])
+
+    first_name_visible = any_visible(
+        [
+            page.get_by_label(re.compile(r"first name", re.I)),
+            page.locator("input[name*='first' i], input[id*='first' i]"),
+        ]
+    )
+    last_name_visible = any_visible(
+        [
+            page.get_by_label(re.compile(r"last name|surname|family name", re.I)),
+            page.locator("input[name*='last' i], input[id*='last' i], input[name*='family' i]"),
+        ]
+    )
+
+    ok_name = True
+    if first_name_visible or last_name_visible:
+        ok_first = fill_first_visible(
+            [
+                page.get_by_label(re.compile(r"first name", re.I)),
+                page.locator("input[name*='first' i], input[id*='first' i]"),
+            ],
+            first_name or CONFIG["guest_name"],
+        )
+        ok_last = fill_first_visible(
+            [
+                page.get_by_label(re.compile(r"last name|surname|family name", re.I)),
+                page.locator("input[name*='last' i], input[id*='last' i], input[name*='family' i]"),
+            ],
+            last_name or "Guest",
+        )
+        ok_name = ok_first and ok_last
+    else:
+        ok_name = fill_first_visible(
+            [
+                page.get_by_label(re.compile(r"full name|name", re.I)),
+                page.locator("input[name*='name' i], input[id*='name' i]"),
+            ],
+            CONFIG["guest_name"],
+        )
+
     ok_email = fill_first_visible(
         [
             page.get_by_label(re.compile(r"e-?mail", re.I)),
@@ -513,6 +569,7 @@ def fill_guest_details(page: Page) -> None:
         ],
         CONFIG["guest_email"],
     )
+
     ok_phone = fill_first_visible(
         [
             page.get_by_label(re.compile(r"phone|mobile|tel", re.I)),
@@ -656,8 +713,11 @@ def run() -> None:
         page.wait_for_timeout(800)
         print(f"Post-search page: {page.url}")
         dump_debug_page(page, "06_after_find_availability")
-        select_availability(page)
-        dump_debug_page(page, "07_after_slot_selection")
+        if is_details_page(page):
+            print("Reached details page directly after availability search.")
+        else:
+            select_availability(page)
+            dump_debug_page(page, "07_after_slot_selection")
         fill_guest_details(page)
         dump_debug_page(page, "08_after_guest_details")
         confirm_booking(page)
